@@ -16,11 +16,13 @@ public class Bird {
     private final double Y_TERMINAL_VELOCITY = 10;
     private final double SWITCH_FRAME = 10;
     private int frameCount = 0;
-    private double y = INITIAL_Y;
-    private double yVelocity = 0;
+    private double y;
+    private double yVelocity;
     private Rectangle boundingBox;
 
     public Bird(Image wingDown, Image wingUp) {
+        y = INITIAL_Y;
+        yVelocity = 0;
         WING_DOWN_IMAGE = wingDown;
         WING_UP_IMAGE = wingUp;
         boundingBox = WING_DOWN_IMAGE.getBoundingBoxAt(new Point(X, y));
