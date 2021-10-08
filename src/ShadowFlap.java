@@ -56,10 +56,8 @@ public class ShadowFlap extends AbstractGame {
      */
     @Override
     public void update(Input input) {
+        BACKGROUND_IMAGE_0.draw(Window.getWidth()/2.0, Window.getHeight()/2.0);
 
-        if (level == 0) {
-            BACKGROUND_IMAGE_0.draw(Window.getWidth()/2.0, Window.getHeight()/2.0);
-        }
 
         if (input.wasPressed(Keys.ESCAPE)) {
             Window.close();
@@ -70,8 +68,8 @@ public class ShadowFlap extends AbstractGame {
             renderInstructionScreen(input);
         }
 
-        // game over
-        if (collision || birdOutOfBound()) {
+        // all bird lives are depleted
+        if (bird.getRemainingLives() == 0) {
             renderGameOverScreen();
         }
 
@@ -82,11 +80,12 @@ public class ShadowFlap extends AbstractGame {
 
 
         // game is active
-        if (gameOn && !collision && !win && !birdOutOfBound()) {
+        if (gameOn && bird.getRemainingLives() != 0 && !win) {
             frameCount++;
 
             bird.update(input);
             Rectangle birdBox = bird.getBox();
+            bird.updateBirdLife(collision, birdOutOfBound());
 
             if (frameCount%100==0) {
                 pipeSets.add(new PlasticPipeSet());
@@ -100,8 +99,13 @@ public class ShadowFlap extends AbstractGame {
                 Rectangle bottomPipeBox = pipeSet.getBottomBox();
 
                 collision = detectCollision(birdBox, topPipeBox, bottomPipeBox);
+                
+                if (collision || birdOutOfBound()) {
+                    pipeSets.remove(pipeSet);
+                    break;
+                }
 
-                if (collision || win) {
+                if (win) {
                     break;
                 }
 
@@ -118,28 +122,28 @@ public class ShadowFlap extends AbstractGame {
 
     public void renderInstructionScreen(Input input) {
         // paint the instruction on screen
-        FONT.drawString(START_INSTRUCTION_MSG, (Window.getWidth()/2.0-(FONT.getWidth(START_INSTRUCTION_MSG)/2.0)), (Window.getHeight()/2.0-(FONT_SIZE/2.0)));
+        FONT.drawString(START_INSTRUCTION_MSG, (Window.getWidth()/2.0-(FONT.getWidth(START_INSTRUCTION_MSG)/2.0)), (Window.getHeight()/2.0+(FONT_SIZE/2.0)));
         if (input.wasPressed(Keys.SPACE)) {
             gameOn = true;
         }
     }
 
     public void renderGameOverScreen() {
-        FONT.drawString(GAME_OVER_MSG, (Window.getWidth()/2.0-(FONT.getWidth(GAME_OVER_MSG)/2.0)), (Window.getHeight()/2.0-(FONT_SIZE/2.0)));
+        FONT.drawString(GAME_OVER_MSG, (Window.getWidth()/2.0-(FONT.getWidth(GAME_OVER_MSG)/2.0)), (Window.getHeight()/2.0+(FONT_SIZE/2.0)));
         String finalScoreMsg = FINAL_SCORE_MSG + score;
-        FONT.drawString(finalScoreMsg, (Window.getWidth()/2.0-(FONT.getWidth(finalScoreMsg)/2.0)), (Window.getHeight()/2.0-(FONT_SIZE/2.0))+SCORE_MSG_OFFSET);
+        FONT.drawString(finalScoreMsg, (Window.getWidth()/2.0-(FONT.getWidth(finalScoreMsg)/2.0)), (Window.getHeight()/2.0+(FONT_SIZE/2.0))+SCORE_MSG_OFFSET);
     }
 
     public void renderWinScreen() {
-        FONT.drawString(CONGRATS_MSG, (Window.getWidth()/2.0-(FONT.getWidth(CONGRATS_MSG)/2.0)), (Window.getHeight()/2.0-(FONT_SIZE/2.0)));
+        FONT.drawString(CONGRATS_MSG, (Window.getWidth()/2.0-(FONT.getWidth(CONGRATS_MSG)/2.0)), (Window.getHeight()/2.0+(FONT_SIZE/2.0)));
         String finalScoreMsg = FINAL_SCORE_MSG + score;
-        FONT.drawString(finalScoreMsg, (Window.getWidth()/2.0-(FONT.getWidth(finalScoreMsg)/2.0)), (Window.getHeight()/2.0-(FONT_SIZE/2.0))+SCORE_MSG_OFFSET);
+        FONT.drawString(finalScoreMsg, (Window.getWidth()/2.0-(FONT.getWidth(finalScoreMsg)/2.0)), (Window.getHeight()/2.0+(FONT_SIZE/2.0))+SCORE_MSG_OFFSET);
     }
 
     public void renderLevelUpScreen() {
-        FONT.drawString(LEVEL_UP_MSG, (Window.getWidth()/2.0-(FONT.getWidth(LEVEL_UP_MSG)/2.0)), (Window.getHeight()/2.0-(FONT_SIZE/2.0)));
+        FONT.drawString(LEVEL_UP_MSG, (Window.getWidth()/2.0-(FONT.getWidth(LEVEL_UP_MSG)/2.0)), (Window.getHeight()/2.0+(FONT_SIZE/2.0)));
         String finalScoreMsg = FINAL_SCORE_MSG + score;
-        FONT.drawString(finalScoreMsg, (Window.getWidth()/2.0-(FONT.getWidth(finalScoreMsg)/2.0)), (Window.getHeight()/2.0-(FONT_SIZE/2.0))+SCORE_MSG_OFFSET);
+        FONT.drawString(finalScoreMsg, (Window.getWidth()/2.0-(FONT.getWidth(finalScoreMsg)/2.0)), (Window.getHeight()/2.0+(FONT_SIZE/2.0))+SCORE_MSG_OFFSET);
     }
 
 
@@ -163,6 +167,7 @@ public class ShadowFlap extends AbstractGame {
         // detect win
         if (score == LEVEL_0_THRESHOLD) {
             win = true;
+            level++;
         }
     }
 

@@ -13,7 +13,6 @@ public abstract class PipeSet {
     private final Image PIPE_IMAGE;
     private final int PIPE_GAP = 168;
     private final int PIPE_SPEED = 5;
-    private final int SPAWNED_FRAME = 100;
     private final int HIGH_GAP_Y = 100;
     private final int MID_GAP_Y = 300;
     private final int LOW_GAP_Y = 500;
@@ -61,6 +60,10 @@ public abstract class PipeSet {
 
     public Rectangle getBottomBox() {
         return PIPE_IMAGE.getBoundingBoxAt(new Point(pipeX, bottomPipeY));
+    }
+
+    public double getPipeX() {
+        return pipeX;
     }
 
     public boolean ScoreAgainst() {
