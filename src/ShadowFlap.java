@@ -21,11 +21,16 @@ public class ShadowFlap extends AbstractGame {
     private final int FONT_SIZE = 48;
     private final Font FONT = new Font("res/font/slkscr.ttf", FONT_SIZE);
     private final int SCORE_MSG_OFFSET = 75;
+    private final int STANDARD_PIPE_FRAME = 100;
+    private final int MIN_TIMESCALE = 1;
+    private final int MAX_TIMESCALE = 5;
     private Bird bird;
     private ArrayList<PlasticPipeSet> pipeSets;
     private int level;
     private int score;
     private int frameCount;
+    private int timescale;
+    private double pipeFrame;
     private boolean gameOn;
     private boolean collision;
     private boolean win;
@@ -37,6 +42,8 @@ public class ShadowFlap extends AbstractGame {
         level = 0;
         score = 0;
         frameCount = 0;
+        timescale = 1;
+        pipeFrame = STANDARD_PIPE_FRAME;
         gameOn = false;
         collision = false;
         win = false;
@@ -56,8 +63,10 @@ public class ShadowFlap extends AbstractGame {
      */
     @Override
     public void update(Input input) {
-        BACKGROUND_IMAGE_0.draw(Window.getWidth()/2.0, Window.getHeight()/2.0);
+        frameCount++;
 
+
+        BACKGROUND_IMAGE_0.draw(Window.getWidth() / 2.0, Window.getHeight() / 2.0);
 
         if (input.wasPressed(Keys.ESCAPE)) {
             Window.close();
@@ -81,15 +90,16 @@ public class ShadowFlap extends AbstractGame {
 
         // game is active
         if (gameOn && bird.getRemainingLives() != 0 && !win) {
-            frameCount++;
 
             bird.update(input);
             bird.updateBirdLife(collision, birdOutOfBound());
-            renderScore();
             Rectangle birdBox = bird.getBox();
 
+            renderScore();
 
-            if (frameCount%100==0) {
+            adjustTimescale(input);
+
+            if (frameCount%pipeFrame == 0) {
                 pipeSets.add(new PlasticPipeSet());
             }
 
@@ -178,6 +188,16 @@ public class ShadowFlap extends AbstractGame {
     void renderScore() {
         String scoreMsg = SCORE_MSG + score;
         FONT.drawString(scoreMsg, 100, 100);
+    }
+
+    void adjustTimescale(Input input) {
+        if (input.wasPressed(Keys.L) && timescale <= MAX_TIMESCALE) {
+            timescale+=1;
+            pipeFrame = Math.ceil(pipeFrame / 1.5);
+        } else if (input.wasPressed(Keys.K) && timescale >= MIN_TIMESCALE) {
+            timescale-=1;
+            pipeFrame = Math.ceil(pipeFrame * 1.5);
+        }
     }
 
 }
