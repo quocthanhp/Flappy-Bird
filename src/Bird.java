@@ -67,6 +67,7 @@ public class Bird {
 
     public Rectangle update(Input input) {
         frameCount += 1;
+
         if (input.wasPressed(Keys.SPACE)) {
             yVelocity = -FLY_SIZE;
             WING_DOWN_IMAGE.draw(X, y);
@@ -83,9 +84,13 @@ public class Bird {
             }
         }
         y += yVelocity;
-
         return boundingBox;
     }
+
+    public void reset() {
+        y = INITIAL_Y;
+    }
+
     public double getY() {
         return y;
     }

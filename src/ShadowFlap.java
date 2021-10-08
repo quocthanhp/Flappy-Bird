@@ -84,8 +84,10 @@ public class ShadowFlap extends AbstractGame {
             frameCount++;
 
             bird.update(input);
-            Rectangle birdBox = bird.getBox();
             bird.updateBirdLife(collision, birdOutOfBound());
+            renderScore();
+            Rectangle birdBox = bird.getBox();
+
 
             if (frameCount%100==0) {
                 pipeSets.add(new PlasticPipeSet());
@@ -99,9 +101,14 @@ public class ShadowFlap extends AbstractGame {
                 Rectangle bottomPipeBox = pipeSet.getBottomBox();
 
                 collision = detectCollision(birdBox, topPipeBox, bottomPipeBox);
-                
-                if (collision || birdOutOfBound()) {
+
+                if (collision) {
                     pipeSets.remove(pipeSet);
+                    break;
+                }
+
+                if (birdOutOfBound()) {
+                    bird.reset();
                     break;
                 }
 
@@ -161,14 +168,16 @@ public class ShadowFlap extends AbstractGame {
             pipeSet.setScoreAgainst(true);
         }
 
-        String scoreMsg = SCORE_MSG + score;
-        FONT.drawString(scoreMsg, 100, 100);
-
-        // detect win
+        // detect level up
         if (score == LEVEL_0_THRESHOLD) {
             win = true;
             level++;
         }
+    }
+
+    void renderScore() {
+        String scoreMsg = SCORE_MSG + score;
+        FONT.drawString(scoreMsg, 100, 100);
     }
 
 }
