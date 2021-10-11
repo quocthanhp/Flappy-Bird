@@ -7,7 +7,7 @@ import bagel.util.Rectangle;
 import java.lang.Math;
 import java.util.ArrayList;
 
-public class Bird {
+public abstract class Bird {
     private final Image WING_DOWN_IMAGE;
     private final Image WING_UP_IMAGE;
     private final ArrayList<Heart> lifeBar;
@@ -26,6 +26,7 @@ public class Bird {
     private double yVelocity;
     private Rectangle boundingBox;
     private boolean start;
+    private Weapon weapon;
 
     public Bird(Image wingDown, Image wingUp, int maxLivesNum) {
         WING_DOWN_IMAGE = wingDown;
@@ -85,6 +86,19 @@ public class Bird {
         }
         y += yVelocity;
         return boundingBox;
+    }
+
+    public void pickWeapon(Weapon weapon) {
+        this.weapon = weapon;
+
+    }
+
+    public void shoot(Input input) {
+        if (input.wasPressed(Keys.S)) {
+            weapon.update();
+        } else {
+            weapon.attachWeapon(boundingBox.bottomRight().x, boundingBox.bottomRight().y);
+        }
     }
 
     public void reset() {

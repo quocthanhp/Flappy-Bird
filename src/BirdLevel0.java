@@ -1,4 +1,6 @@
 import bagel.Image;
+import bagel.Input;
+import bagel.Keys;
 
 public class BirdLevel0 extends Bird {
     private static final Image WING_DOWN = new Image("res/level-0/birdWingDown.png");
@@ -8,6 +10,8 @@ public class BirdLevel0 extends Bird {
     public BirdLevel0() {
         super(WING_DOWN, WING_UP, MAX_LIVES);
     }
+
+
 
 
 }

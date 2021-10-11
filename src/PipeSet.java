@@ -16,10 +16,10 @@ public abstract class PipeSet {
     private final int HIGH_GAP_Y = 100;
     private final int MID_GAP_Y = 300;
     private final int LOW_GAP_Y = 500;
-    private final DrawOptions ROTATOR = new DrawOptions().setRotation(Math.PI);
-    private double topPipeY;
-    private double bottomPipeY;
-    private double pipeX = Window.getWidth();
+    protected final DrawOptions ROTATOR = new DrawOptions().setRotation(Math.PI);
+    protected double topPipeY;
+    protected double bottomPipeY;
+    protected double pipeX = Window.getWidth();
     private boolean firstInstantiated;
     private boolean scoreAgainst;
 
@@ -35,7 +35,7 @@ public abstract class PipeSet {
         PIPE_IMAGE.draw(pipeX, bottomPipeY, ROTATOR);
     }
 
-    public void setRandomY() {
+    public void setRandomY0() {
         List<Integer> spawnValue = Arrays.asList(HIGH_GAP_Y, MID_GAP_Y, LOW_GAP_Y);
         Random rand = new Random();
         int randomSpawnValue = spawnValue.get(rand.nextInt(spawnValue.size()));
@@ -44,11 +44,23 @@ public abstract class PipeSet {
         bottomPipeY = Window.getHeight() + PIPE_GAP  / 2.0 + (randomSpawnValue - MID_GAP_Y);
     }
 
+    public void setRandomY1() {
+        int randomSpawnValue = LOW_GAP_Y + (int)(Math.random() * ((HIGH_GAP_Y - LOW_GAP_Y) + 1));
 
-    public void update() {
+        topPipeY = - PIPE_GAP / 2.0 + (randomSpawnValue - MID_GAP_Y);
+        bottomPipeY = Window.getHeight() + PIPE_GAP  / 2.0 + (randomSpawnValue - MID_GAP_Y);
+    }
+
+
+    public void update(int level) {
         if (firstInstantiated) {
-            setRandomY();
-            firstInstantiated = false;
+            if (level == 0) {
+                setRandomY0();
+                firstInstantiated = false;
+            } else if (level == 1) {
+                setRandomY1();
+                firstInstantiated = false;
+            }
         }
         renderPipeSet();
         pipeX -= PIPE_SPEED;
