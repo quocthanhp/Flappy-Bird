@@ -14,7 +14,7 @@ public class BirdLevel1 extends Bird {
         super(WING_DOWN, WING_UP, MAX_LIVES);
     }
 
-    /*public void pickWeapon(Weapon weapon) {
+    /* public void pickWeapon(Weapon weapon) {
         this.weapon = weapon;
         weapon.attachWeapon(getBox().bottomRight().x, getBox().bottomRight().y);
     }

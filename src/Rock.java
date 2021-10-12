@@ -7,4 +7,6 @@ public class Rock extends Weapon {
     public Rock() {
         super(ROCK_IMAGE, RANGE);
     }
+
+
 }

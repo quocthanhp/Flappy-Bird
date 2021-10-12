@@ -3,7 +3,7 @@ import bagel.Window;
 import bagel.util.Point;
 import bagel.util.Rectangle;
 
-public class Weapon {
+public abstract class Weapon {
     private final Image WEAPON_IMAGE;
     private final int SHOOTING_RANGE;
     private final int MAX_Y = 500;
@@ -11,9 +11,13 @@ public class Weapon {
     private final int TRAVEL_SPEED = 5;
     private double weaponX = Window.getWidth();
     private double weaponY;
+    private double xVelocity = 0;
+    private double yVelocity = 0;
     private Rectangle boundingBox;
     private boolean firstInstantiated = true;
     private boolean shot = false;
+    private boolean reachRange = false;
+    private boolean picked = false;
 
 
     public Weapon(Image image, int shootingRange) {
@@ -30,26 +34,64 @@ public class Weapon {
         WEAPON_IMAGE.draw(weaponX, weaponY);
     }
 
-    public void attachWeapon(double x, double y) {
-        WEAPON_IMAGE.draw(x, y);
-    }
 
     public void update() {
         if (firstInstantiated) {
             setRandomY();
             firstInstantiated = false;
         }
-        renderWeapon();
-        boundingBox = WEAPON_IMAGE.getBoundingBoxAt(new Point(weaponX, weaponY));
-        if (!shot) {
+        if (!picked) {
+            renderWeapon();
             weaponX -= TRAVEL_SPEED;
-        } else {
-            weaponX += TRAVEL_SPEED;
+        }
+
+        if (picked) {
+            renderWeapon();
+        }
+
+        boundingBox = WEAPON_IMAGE.getBoundingBoxAt(new Point(weaponX, weaponY));
+
+        if (shot) {
+            if (xVelocity < SHOOTING_RANGE) {
+                xVelocity += TRAVEL_SPEED;
+                weaponX += xVelocity;
+                renderWeapon();
+            } else {
+                reachRange = true;
+            }
         }
     }
 
     public Rectangle getBoundingBox() {
         return boundingBox;
+    }
+
+    public void setWeaponX(double weaponX) {
+        this.weaponX = weaponX;
+    }
+
+    public void setWeaponY(double weaponY) {
+        this.weaponY = weaponY;
+    }
+
+    public void setShot(boolean shot) {
+        this.shot = shot;
+    }
+
+    public boolean isShot() {
+        return shot;
+    }
+
+    public void setPicked(boolean picked) {
+        this.picked = picked;
+    }
+
+    public boolean isPicked() {
+        return picked;
+    }
+
+    public boolean reachRange() {
+        return reachRange;
     }
 }
 

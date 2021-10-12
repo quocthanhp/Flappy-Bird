@@ -85,19 +85,27 @@ public abstract class Bird {
             }
         }
         y += yVelocity;
+
+        if (weapon != null && !weapon.isShot() && weapon.isPicked()) {
+            weapon.setWeaponX(boundingBox.bottomRight().x);
+            weapon.setWeaponY(boundingBox.bottomRight().y);
+        }
+
         return boundingBox;
     }
 
-    public void pickWeapon(Weapon weapon) {
-        this.weapon = weapon;
 
+    public void holdWeapon(Weapon pickedWeapon) {
+        if (weapon==null) {
+            weapon = pickedWeapon;
+            weapon.setPicked(true);
+        }
     }
 
     public void shoot(Input input) {
-        if (input.wasPressed(Keys.S)) {
-            weapon.update();
-        } else {
-            weapon.attachWeapon(boundingBox.bottomRight().x, boundingBox.bottomRight().y);
+        if (input.wasPressed(Keys.S) && weapon != null) {
+            weapon.setShot(true);
+            weapon = null;
         }
     }
 
@@ -120,4 +128,5 @@ public abstract class Bird {
     public int getRemainingLives() {
         return remainingLives;
     }
+
 }

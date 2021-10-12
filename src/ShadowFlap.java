@@ -20,7 +20,7 @@ public class ShadowFlap extends AbstractGame {
     private final String FINAL_SCORE_MSG = "FINAL SCORE: ";
     private final String LEVEL_UP_MSG = "LEVEL-UP!";
     private final int LEVEL_UP_FRAME = 150;
-    private final int LEVEL_0_THRESHOLD = 2;
+    private final int LEVEL_0_THRESHOLD = 1;
     private final int LEVEL_1_THRESHOLD = 20;
     private final int FONT_SIZE = 48;
     private final Font FONT = new Font("res/font/slkscr.ttf", FONT_SIZE);
@@ -127,16 +127,18 @@ public class ShadowFlap extends AbstractGame {
 
             adjustTimescale(input);
 
-            if (frameCount%pipeFrame == 0) {
-                if (level==0) {
+            if (level==0) {
+                if (frameCount % pipeFrame == 0) {
                     pipeSets.add(new PlasticPipeSet());
-                } else if (level == 1) {
-                    pipeSets.add(randomPipeSet());
                 }
             }
 
             if (level == 1) {
-                if (frameCount%weaponFrame == 0) {
+                if (frameCount % pipeFrame == 0) {
+                    pipeSets.add(randomPipeSet());
+                }
+
+                if (frameCount % weaponFrame == 0) {
                     weapons.add(randomWeapon());
                 }
 
@@ -144,19 +146,22 @@ public class ShadowFlap extends AbstractGame {
                     weapon.update();
 
                     Rectangle weaponBox = weapon.getBoundingBox();
+
                     if (detectPick(birdBox, weaponBox)) {
-                        bird[level].pickWeapon(weapon);
+                        bird[level].holdWeapon(weapon);
                         bird[level].shoot(input);
                     }
 
+                    if (weapon.reachRange()) {
+                        weapons.remove(weapon);
+                        break;
+                    }
 
                 }
-
 
             }
 
             for (PipeSet pipeSet : pipeSets) {
-
                 pipeSet.update(level);
 
                 Rectangle topPipeBox = pipeSet.getTopBox();
@@ -230,7 +235,7 @@ public class ShadowFlap extends AbstractGame {
     }
 
     public boolean detectPick(Rectangle birdBox, Rectangle weapon) {
-        // check for collision
+        // check for pick
         return birdBox.intersects(weapon);
 
     }
