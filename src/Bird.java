@@ -6,6 +6,7 @@ import bagel.util.Point;
 import bagel.util.Rectangle;
 import java.lang.Math;
 import java.util.ArrayList;
+import java.util.Objects;
 
 public abstract class Bird {
     private final Image WING_DOWN_IMAGE;
@@ -26,6 +27,7 @@ public abstract class Bird {
     private double yVelocity;
     private Rectangle boundingBox;
     private boolean start;
+    private boolean holdingWeapon;
     private Weapon weapon;
 
     public Bird(Image wingDown, Image wingUp, int maxLivesNum) {
@@ -38,6 +40,7 @@ public abstract class Bird {
         yVelocity = 0;
         boundingBox = WING_DOWN_IMAGE.getBoundingBoxAt(new Point(X, y));
         start = true;
+        holdingWeapon = false;
     }
 
     public void renderBirdLifeBar() {
@@ -86,7 +89,7 @@ public abstract class Bird {
         }
         y += yVelocity;
 
-        if (weapon != null && !weapon.isShot() && weapon.isPicked()) {
+        if (holdingWeapon && !weapon.isShot() && weapon.isPicked()) {
             weapon.setWeaponX(boundingBox.bottomRight().x);
             weapon.setWeaponY(boundingBox.bottomRight().y);
         }
@@ -96,16 +99,17 @@ public abstract class Bird {
 
 
     public void holdWeapon(Weapon pickedWeapon) {
-        if (weapon==null) {
+        if (!holdingWeapon) {
             weapon = pickedWeapon;
             weapon.setPicked(true);
+            holdingWeapon = true;
         }
     }
 
-    public void shoot(Input input) {
-        if (input.wasPressed(Keys.S) && weapon != null) {
+    public void shoot() {
+        if (holdingWeapon) {
             weapon.setShot(true);
-            weapon = null;
+            holdingWeapon = false;
         }
     }
 
@@ -129,4 +133,7 @@ public abstract class Bird {
         return remainingLives;
     }
 
+    public boolean isHoldingWeapon() {
+        return holdingWeapon;
+    }
 }

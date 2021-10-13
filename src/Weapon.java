@@ -11,8 +11,7 @@ public abstract class Weapon {
     private final int TRAVEL_SPEED = 5;
     private double weaponX = Window.getWidth();
     private double weaponY;
-    private double xVelocity = 0;
-    private double yVelocity = 0;
+    private double xVelocity;
     private Rectangle boundingBox;
     private boolean firstInstantiated = true;
     private boolean shot = false;
@@ -36,20 +35,22 @@ public abstract class Weapon {
 
 
     public void update() {
+
         if (firstInstantiated) {
             setRandomY();
             firstInstantiated = false;
         }
+
         if (!picked) {
             renderWeapon();
             weaponX -= TRAVEL_SPEED;
+            boundingBox = WEAPON_IMAGE.getBoundingBoxAt(new Point(weaponX, weaponY));
         }
 
-        if (picked) {
+        if (picked && !shot) {
             renderWeapon();
+            boundingBox = WEAPON_IMAGE.getBoundingBoxAt(new Point(weaponX, weaponY));
         }
-
-        boundingBox = WEAPON_IMAGE.getBoundingBoxAt(new Point(weaponX, weaponY));
 
         if (shot) {
             if (xVelocity < SHOOTING_RANGE) {
@@ -59,6 +60,7 @@ public abstract class Weapon {
             } else {
                 reachRange = true;
             }
+            boundingBox = WEAPON_IMAGE.getBoundingBoxAt(new Point(weaponX, weaponY));
         }
     }
 

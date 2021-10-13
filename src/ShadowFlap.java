@@ -20,46 +20,50 @@ public class ShadowFlap extends AbstractGame {
     private final String FINAL_SCORE_MSG = "FINAL SCORE: ";
     private final String LEVEL_UP_MSG = "LEVEL-UP!";
     private final int LEVEL_UP_FRAME = 150;
-    private final int LEVEL_0_THRESHOLD = 1;
-    private final int LEVEL_1_THRESHOLD = 20;
+    private final int LEVEL_0_THRESHOLD = 10;
+    private final int LEVEL_1_THRESHOLD = 30;
     private final int FONT_SIZE = 48;
     private final Font FONT = new Font("res/font/slkscr.ttf", FONT_SIZE);
     private final int SCORE_MSG_OFFSET = 75;
     private final int SHOOT_MSG_OFFSET = 75;
     private final int STANDARD_PIPE_FRAME = 100;
-    private final int STANDARD_WEAPON_FRAME = 150;
     private final int MIN_TIMESCALE = 1;
     private final int MAX_TIMESCALE = 5;
-    private Bird[] bird;
+    private Bird bird;
     private ArrayList<PipeSet> pipeSets;
     private ArrayList<Weapon> weapons;
     private int level;
     private int score;
     private int frameCount;
+    private int frameMultiplier;
     private int levelUpFrame;
     private int timescale;
     private double pipeFrame;
-    private double weaponFrame;
     private boolean gameOn;
-    private boolean collision;
+    private boolean birdPipeCollision;
+    private boolean pipeWeaponCollision;
+    private boolean weaponReachRange;
     private boolean levelUp;
     private boolean win;
     private boolean reset;
 
+
     public ShadowFlap() {
         super(1024, 768, "ShadowFlap");
-        bird = new Bird[] {new BirdLevel0(), new BirdLevel1()};
+        bird = new BirdLevel0();
         pipeSets = new ArrayList<>();
         weapons = new ArrayList<>();
         level = 0;
         score = 0;
         frameCount = 0;
+        frameMultiplier = 1;
         levelUpFrame = 0;
         timescale = MIN_TIMESCALE;
         pipeFrame = STANDARD_PIPE_FRAME;
-        weaponFrame = STANDARD_WEAPON_FRAME;
         gameOn = false;
-        collision = false;
+        birdPipeCollision = false;
+        pipeWeaponCollision = false;
+        weaponReachRange = false;
         levelUp = false;
         win = false;
         reset = false;
@@ -84,7 +88,7 @@ public class ShadowFlap extends AbstractGame {
         }
         else if (level == 1) {
             if (!reset) {
-                resetGame();
+                resetGameForLevelUp();
                 reset = true;
             }
             BACKGROUND_IMAGE_1.draw(Window.getWidth() / 2.0, Window.getHeight() / 2.0);
@@ -100,7 +104,7 @@ public class ShadowFlap extends AbstractGame {
         }
 
         // all bird lives are depleted
-        if (bird[level].getRemainingLives() == 0) {
+        if (bird.getRemainingLives() == 0) {
             renderGameOverScreen();
         }
 
@@ -116,66 +120,41 @@ public class ShadowFlap extends AbstractGame {
         }
 
         // game is active
-        if (gameOn && bird[level].getRemainingLives() != 0 && !win && !levelUp) {
+        if (gameOn && bird.getRemainingLives() != 0 && !win && !levelUp) {
             frameCount++;
-
-            bird[level].update(input);
-            bird[level].updateBirdLife(collision, birdOutOfBound());
-            Rectangle birdBox = bird[level].getBox();
-
+            bird.update(input);
+            bird.updateBirdLife(birdPipeCollision, birdOutOfBound());
+            Rectangle birdBox = bird.getBox();
             renderScore();
-
             adjustTimescale(input);
 
-            if (level==0) {
-                if (frameCount % pipeFrame == 0) {
+
+            if (frameCount % pipeFrame == 0) {
+                if (level == 0) {
                     pipeSets.add(new PlasticPipeSet());
+                } else if (level == 1) {
+                    pipeSets.add(randomPipeSet());
                 }
             }
 
-            if (level == 1) {
-                if (frameCount % pipeFrame == 0) {
-                    pipeSets.add(randomPipeSet());
-                }
-
-                if (frameCount % weaponFrame == 0) {
-                    weapons.add(randomWeapon());
-                }
-
-                for (Weapon weapon : weapons) {
-                    weapon.update();
-
-                    Rectangle weaponBox = weapon.getBoundingBox();
-
-                    if (detectPick(birdBox, weaponBox)) {
-                        bird[level].holdWeapon(weapon);
-                        bird[level].shoot(input);
-                    }
-
-                    if (weapon.reachRange()) {
-                        weapons.remove(weapon);
-                        break;
-                    }
-
-                }
-
+            if (level == 1 && frameCount% (pipeFrame * frameMultiplier + pipeFrame / 2.0) == 0) {
+                weapons.add(randomWeapon());
+                frameMultiplier++;
             }
 
             for (PipeSet pipeSet : pipeSets) {
                 pipeSet.update(level);
-
                 Rectangle topPipeBox = pipeSet.getTopBox();
                 Rectangle bottomPipeBox = pipeSet.getBottomBox();
+                birdPipeCollision = detectCollision(birdBox, topPipeBox, bottomPipeBox);
 
-                collision = detectCollision(birdBox, topPipeBox, bottomPipeBox);
-
-                if (collision) {
+                if (birdPipeCollision) {
                     pipeSets.remove(pipeSet);
                     break;
                 }
 
                 if (birdOutOfBound()) {
-                    bird[level].reset();
+                    bird.reset();
                     break;
                 }
 
@@ -188,14 +167,54 @@ public class ShadowFlap extends AbstractGame {
                 }
 
                 updateScore(pipeSet);
-
             }
 
+            for (Weapon weapon : weapons) {
+                weapon.update();
+                Rectangle weaponBox = weapon.getBoundingBox();
+
+                if (detectPick(birdBox, weaponBox) && !bird.isHoldingWeapon() && !weapon.isPicked()) {
+                    bird.holdWeapon(weapon);
+                }
+
+                if (input.wasPressed(Keys.S)) {
+                    bird.shoot();
+                }
+
+                if (weapon.isShot()) {
+                    for (PipeSet pipeSet : pipeSets) {
+                        Rectangle topPipeBox = pipeSet.getTopBox();
+                        Rectangle bottomPipeBox = pipeSet.getBottomBox();
+                        pipeWeaponCollision = detectPipeWeaponCollision(weaponBox, topPipeBox, bottomPipeBox);
+                        weaponReachRange = weapon.reachRange();
+
+                        if (pipeWeaponCollision) {
+                            if (detectDestruction(pipeSet, weapon)) {
+                                pipeSet.setDestroyable(true);
+                                updateScore(pipeSet);
+                                pipeSets.remove(pipeSet);
+                                weapons.remove(weapon);
+                                break;
+                            }
+                        } else if (weaponReachRange) {
+                            weapons.remove(weapon);
+                            break;
+                        }
+                    }
+                }
+
+                if (pipeWeaponCollision || weaponReachRange) {
+                    pipeWeaponCollision = false;
+                    weaponReachRange = false;
+                    break;
+                }
+
+            }
         }
     }
 
     public boolean birdOutOfBound() {
-        return (bird[level].getY() > Window.getHeight()) || (bird[level].getY() < 0);
+        return (bird.getY() > Window.getHeight()) || (bird.getY() < 0);
     }
 
     public void renderInstructionScreen(Input input) {
@@ -237,15 +256,30 @@ public class ShadowFlap extends AbstractGame {
     public boolean detectPick(Rectangle birdBox, Rectangle weapon) {
         // check for pick
         return birdBox.intersects(weapon);
+    }
 
+    public boolean detectPipeWeaponCollision(Rectangle weaponBox, Rectangle topPipeBox, Rectangle bottomPipeBox) {
+        // check for collision
+        return weaponBox.intersects(topPipeBox) ||
+                weaponBox.intersects(bottomPipeBox);
+    }
+
+    public boolean detectDestruction(PipeSet pipeSet, Weapon weapon) {
+        if (weapon instanceof Rock && pipeSet instanceof PlasticPipeSet) {
+            return true;
+        } else return weapon instanceof Bomb;
     }
 
     public void updateScore(PipeSet pipeSet) {
-        if (bird[level].getX() > pipeSet.getTopBox().right()) {
+        if (bird.getX() > pipeSet.getTopBox().right()) {
             if (!pipeSet.ScoreAgainst()) {
                 score++;
             }
             pipeSet.setScoreAgainst(true);
+        }
+
+        if (pipeSet.isDestroyable()) {
+            score++;
         }
 
         // detect level up
@@ -269,21 +303,15 @@ public class ShadowFlap extends AbstractGame {
         if (input.wasPressed(Keys.L) && timescale <= MAX_TIMESCALE) {
             timescale+=1;
             pipeFrame = Math.ceil(pipeFrame / 1.5);
-            if (level == 1) {
-                weaponFrame = Math.ceil(pipeFrame / 1.5);
-            }
         } else if (input.wasPressed(Keys.K) && timescale >= MIN_TIMESCALE) {
             timescale-=1;
             pipeFrame = Math.ceil(pipeFrame * 1.5);
-            if (level == 1) {
-                weaponFrame = Math.ceil(pipeFrame * 1.5);
-            }
         }
     }
 
-    public void resetGame() {
+    public void resetGameForLevelUp() {
         gameOn = false;
-        collision = false;
+        birdPipeCollision = false;
         win = false;
         levelUp = false;
         timescale = MIN_TIMESCALE;
@@ -291,6 +319,7 @@ public class ShadowFlap extends AbstractGame {
         score = 0;
         frameCount = 0;
         pipeSets = new ArrayList<>();
+        bird = new BirdLevel1();
     }
 
     public PipeSet randomPipeSet() {
