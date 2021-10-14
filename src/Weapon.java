@@ -1,4 +1,6 @@
 import bagel.Image;
+import bagel.Input;
+import bagel.Keys;
 import bagel.Window;
 import bagel.util.Point;
 import bagel.util.Rectangle;
@@ -12,10 +14,14 @@ public abstract class Weapon {
     private final int SHOOTING_RANGE;
     private final int MAX_Y = 500;
     private final int MIN_Y = 100;
-    private final int TRAVEL_SPEED = 5;
+    private final int MIN_TIMESCALE = 1;
+    private final int MAX_TIMESCALE = 5;
+    private int timescale = MIN_TIMESCALE;
     private double weaponX = Window.getWidth();
     private double weaponY;
     private double xVelocity;
+    private double weaponSpeed = 5;
+    private double weaponShootingSpeed = 5;
     private Rectangle boundingBox;
     private boolean firstInstantiated = true;
     private boolean shot = false;
@@ -51,9 +57,10 @@ public abstract class Weapon {
 
 
     /** Update state of weapon
-     *
+     * @param input user input
      */
-    public void update() {
+    public void update(Input input) {
+        adjustTimescaleForWeaponSpeed(input);
 
         if (firstInstantiated) {
             setRandomY();
@@ -62,7 +69,7 @@ public abstract class Weapon {
 
         if (!picked) {
             renderWeapon();
-            weaponX -= TRAVEL_SPEED;
+            weaponX -= weaponSpeed;
             boundingBox = WEAPON_IMAGE.getBoundingBoxAt(new Point(weaponX, weaponY));
         }
 
@@ -73,13 +80,28 @@ public abstract class Weapon {
 
         if (shot) {
             if (xVelocity < SHOOTING_RANGE) {
-                xVelocity += TRAVEL_SPEED;
+                xVelocity += weaponShootingSpeed;
                 weaponX += xVelocity;
                 renderWeapon();
             } else {
                 reachRange = true;
             }
             boundingBox = WEAPON_IMAGE.getBoundingBoxAt(new Point(weaponX, weaponY));
+        }
+    }
+
+
+    /** Increase timescale for weapon speed by 1 when L is pressed, decrease timescale for weapon speed by 1 when K is pressed
+     * @param input user input
+     */
+    public void adjustTimescaleForWeaponSpeed(Input input) {
+        if (input.wasPressed(Keys.L) && timescale <= MAX_TIMESCALE) {
+            timescale += 1;
+            weaponSpeed = Math.ceil(weaponSpeed * 1.5);
+        }
+        else if (input.wasPressed(Keys.K) && timescale >= MIN_TIMESCALE) {
+            timescale -= 1;
+            weaponSpeed = Math.ceil(weaponSpeed / 1.5);
         }
     }
 
@@ -105,6 +127,14 @@ public abstract class Weapon {
      */
     public void setWeaponY(double weaponY) {
         this.weaponY = weaponY;
+    }
+
+
+    /** Set weapon speed to given value
+     * @param weaponSpeed
+     */
+    public void setWeaponSpeed(double weaponSpeed) {
+        this.weaponSpeed = weaponSpeed;
     }
 
 

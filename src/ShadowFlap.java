@@ -133,7 +133,7 @@ public class ShadowFlap extends AbstractGame {
 
             renderScore();
 
-            adjustTimescale(input);
+            adjustTimescaleForSpawning(input);
 
             if (frameCount % pipeFrame == 0) {
                 if (level == 0) {
@@ -150,7 +150,7 @@ public class ShadowFlap extends AbstractGame {
             }
 
             for (PipeSet pipeSet : pipeSets) {
-                pipeSet.update(level);
+                pipeSet.update(level, input);
                 Rectangle topPipeBox = pipeSet.getTopBox();
                 Rectangle bottomPipeBox = pipeSet.getBottomBox();
 
@@ -178,7 +178,7 @@ public class ShadowFlap extends AbstractGame {
             }
 
             for (Weapon weapon : weapons) {
-                weapon.update();
+                weapon.update(input);
                 Rectangle weaponBox = weapon.getBoundingBox();
 
                 if (detectPick(birdBox, weaponBox) && !bird.isHoldingWeapon() && !weapon.isPicked()) {
@@ -365,10 +365,10 @@ public class ShadowFlap extends AbstractGame {
     }
 
 
-    /** Increase timescale by 1 when L is pressed, decrease timescale by 1 when K is pressed
-     * @param input user input
+    /** Increase timescale for spawning by 1 when L is pressed, decrease timescale for spawning by 1 when K is pressed
+     * @param input user input (L or K)
      */
-    public void adjustTimescale(Input input) {
+    public void adjustTimescaleForSpawning(Input input) {
         if (input.wasPressed(Keys.L) && timescale <= MAX_TIMESCALE) {
             timescale += 1;
             pipeFrame = Math.ceil(pipeFrame / 1.5);

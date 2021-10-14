@@ -1,6 +1,4 @@
-import bagel.DrawOptions;
-import bagel.Image;
-import bagel.Window;
+import bagel.*;
 import bagel.util.Point;
 import bagel.util.Rectangle;
 import java.util.Arrays;
@@ -14,14 +12,17 @@ import java.util.Random;
 public abstract class PipeSet {
     private final Image PIPE_IMAGE;
     private final int PIPE_GAP = 168;
-    private final int PIPE_SPEED = 5;
     private final int HIGH_GAP_Y = 100;
     private final int MID_GAP_Y = 300;
     private final int LOW_GAP_Y = 500;
+    private final int MIN_TIMESCALE = 1;
+    private final int MAX_TIMESCALE = 5;
     private final DrawOptions ROTATOR = new DrawOptions().setRotation(Math.PI);
+    private double pipeSpeed = 5;
     private double topPipeY;
     private double bottomPipeY;
     private double pipeX = Window.getWidth();
+    private int timescale = MIN_TIMESCALE;
     private boolean firstInstantiated = true;
     private boolean scoreAgainst = false;
     private boolean destroyable = false;
@@ -66,10 +67,13 @@ public abstract class PipeSet {
     }
 
 
-    /** Update state of pipes
+    /** Update state of pipe set
      * @param level level number
+     * @param input user input
      */
-    public void update(int level) {
+    public void update(int level, Input input) {
+        adjustTimescaleForPipeSpeed(input);
+
         if (firstInstantiated) {
             if (level == 0) {
                 setRandomYLevel0();
@@ -80,8 +84,24 @@ public abstract class PipeSet {
                 firstInstantiated = false;
             }
         }
+
         renderPipeSet();
-        pipeX -= PIPE_SPEED;
+        pipeX -= pipeSpeed;
+    }
+
+
+    /** Increase timescale for pipe speed by 1 when L is pressed, decrease timescale for pipe speed by 1 when K is pressed
+     * @param input user input
+     */
+    public void adjustTimescaleForPipeSpeed(Input input) {
+        if (input.wasPressed(Keys.L) && timescale <= MAX_TIMESCALE) {
+            timescale += 1;
+            pipeSpeed = Math.ceil(pipeSpeed * 1.5);
+        }
+        else if (input.wasPressed(Keys.K) && timescale >= MIN_TIMESCALE) {
+            timescale -= 1;
+            pipeSpeed = Math.ceil(pipeSpeed / 1.5);
+        }
     }
 
 
@@ -133,6 +153,14 @@ public abstract class PipeSet {
     }
 
 
+    /** Set speed of pipe set to given value
+     * @param pipeSpeed speed of pipe set
+     */
+    public void setPipeSpeed(double pipeSpeed) {
+        this.pipeSpeed = pipeSpeed;
+    }
+
+
     /** Check whether pipe set is scored against by bird
      * @return whether pipe set is scored against by bird
      */
@@ -141,7 +169,7 @@ public abstract class PipeSet {
     }
 
 
-    /** Set scoreAgainst state of pipes to true/false
+    /** Set scoreAgainst state of pipe set to true/false
      * @param scoreAgainst scoreAgainst state
      */
     public void setScoreAgainst(boolean scoreAgainst) {
