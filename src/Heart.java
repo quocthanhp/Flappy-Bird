@@ -1,17 +1,27 @@
 import bagel.Image;
 
+
+/** Base class for all hearts in the game
+ *
+ */
 public abstract class Heart {
     private final Image HEART_IMAGE;
-    private final double INITIAL_X = 100.0;
-    private final double INITIAL_Y = 15.0;
 
+
+    /** Can not be instantiated
+     * @param image heart image
+     */
     public Heart(Image image) {
         this.HEART_IMAGE = image;
     }
 
-    public void renderHeart(int space) {
-        HEART_IMAGE.drawFromTopLeft(INITIAL_X + space, INITIAL_Y);
-    }
 
+    /** Draw heart with its top left at (x, y)
+     * @param x x coordinate
+     * @param y y coordinate
+     */
+    public void renderHeart(double x, double y) {
+        HEART_IMAGE.drawFromTopLeft(x, y);
+    }
 
 }

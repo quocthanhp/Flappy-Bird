@@ -1,4 +1,3 @@
-import bagel.DrawOptions;
 import bagel.Image;
 import bagel.Input;
 import bagel.Keys;
@@ -6,8 +5,11 @@ import bagel.util.Point;
 import bagel.util.Rectangle;
 import java.lang.Math;
 import java.util.ArrayList;
-import java.util.Objects;
 
+
+/** Base class for all birds in the game. Class modified from solution for Project 1 written by Betty Lin
+ *
+ */
 public abstract class Bird {
     private final Image WING_DOWN_IMAGE;
     private final Image WING_UP_IMAGE;
@@ -18,57 +20,73 @@ public abstract class Bird {
     private final double INITIAL_Y = 350;
     private final double Y_TERMINAL_VELOCITY = 10;
     private final double SWITCH_FRAME = 10;
+    private final double INITIAL_HEART_X = 100;
+    private final double INITIAL_HEART_Y = 15;
+    private final double HEART_SPACES = 50;
     private final int MAX_LIVES;
-    private final int SPACES = 50;
-    private int remainingLives;
+    private int remainingHearts;
     private int spacesCount = 0;
     private int frameCount = 0;
-    private double y;
-    private double yVelocity;
+    private double y = INITIAL_Y;
+    private double yVelocity = 0;
+    private boolean firstInstantiated = true;
+    private boolean holdingWeapon = false;
     private Rectangle boundingBox;
-    private boolean start;
-    private boolean holdingWeapon;
     private Weapon weapon;
 
-    public Bird(Image wingDown, Image wingUp, int maxLivesNum) {
+
+    /** Can not be instantiated
+     * @param wingDown bird wing down image
+     * @param wingUp bird wing up image
+     * @param maxHeartNum max number of hearts
+     */
+    public Bird(Image wingDown, Image wingUp, int maxHeartNum) {
         WING_DOWN_IMAGE = wingDown;
         WING_UP_IMAGE = wingUp;
         lifeBar = new ArrayList<>();
-        MAX_LIVES = maxLivesNum;
-        remainingLives = maxLivesNum;
-        y = INITIAL_Y;
-        yVelocity = 0;
+        MAX_LIVES = maxHeartNum;
+        remainingHearts = maxHeartNum;
         boundingBox = WING_DOWN_IMAGE.getBoundingBoxAt(new Point(X, y));
-        start = true;
-        holdingWeapon = false;
     }
 
-    public void renderBirdLifeBar() {
 
+    /** Draw life bar of the bird
+     *
+     */
+    public void renderBirdLifeBar() {
         for (int i = 0; i < MAX_LIVES; i++) {
-            lifeBar.get(i).renderHeart(spacesCount);
-            spacesCount += SPACES;
+            lifeBar.get(i).renderHeart(INITIAL_HEART_X + spacesCount, INITIAL_HEART_Y);
+            spacesCount += HEART_SPACES;
         }
         spacesCount = 0;
     }
 
-    public void updateBirdLife(boolean collision, boolean outOfBound) {
-        if (start) {
+
+    /** Update life bar of bird by removing one heart in case of collision or out of bound
+     * @param collision collision state
+     * @param outOfBound out of bound state
+     */
+    public void updateBirdLifeBar(boolean collision, boolean outOfBound) {
+        if (firstInstantiated) {
             for (int i = 0; i < MAX_LIVES; i++) {
                 lifeBar.add(new FullHeart());
             }
-            start = false;
+            firstInstantiated = false;
         }
 
         if (collision || outOfBound) {
-            lifeBar.remove(remainingLives-1);
+            lifeBar.remove(remainingHearts-1);
             lifeBar.add(new EmptyHeart());
-            remainingLives--;
+            remainingHearts--;
         }
-
         renderBirdLifeBar();
     }
 
+
+    /** Update state of bird when flying
+     * @param input user input
+     * @return bounding box of the bird
+     */
     public Rectangle update(Input input) {
         frameCount += 1;
 
@@ -93,11 +111,13 @@ public abstract class Bird {
             weapon.setWeaponX(boundingBox.bottomRight().x);
             weapon.setWeaponY(boundingBox.bottomRight().y);
         }
-
         return boundingBox;
     }
 
 
+    /** Instantiate weapon picked by bird
+     * @param pickedWeapon weapon picked by bird
+     */
     public void holdWeapon(Weapon pickedWeapon) {
         if (!holdingWeapon) {
             weapon = pickedWeapon;
@@ -106,6 +126,10 @@ public abstract class Bird {
         }
     }
 
+
+    /** Update the state of bird and its weapon when bird shoots weapon
+     *
+     */
     public void shoot() {
         if (holdingWeapon) {
             weapon.setShot(true);
@@ -113,26 +137,50 @@ public abstract class Bird {
         }
     }
 
+
+    /** Reset position of bird in case of out of bound
+     *
+     */
     public void reset() {
         y = INITIAL_Y;
     }
 
+
+    /** Get y coordinates of centre of bird
+     * @return y coordinates of centre of bird
+     */
     public double getY() {
         return y;
     }
 
+
+    /** Get x coordinates of centre of bird
+     * @return x coordinates of centre of bird
+     */
     public double getX() {
         return X;
     }
 
+
+    /** Get bounding box of bird
+     * @return bounding box of bird
+     */
     public Rectangle getBox() {
         return boundingBox;
     }
 
-    public int getRemainingLives() {
-        return remainingLives;
+
+    /** Get number of remaining hearts of bird
+     * @return number of remaining hearts of bird
+     */
+    public int getRemainingHearts() {
+        return remainingHearts;
     }
 
+
+    /** Check whether bird is holding weapon
+     * @return whether bird is holding weapon
+     */
     public boolean isHoldingWeapon() {
         return holdingWeapon;
     }
